@@ -14,11 +14,11 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
 
     var data: [T] = []
     var context: NSManagedObjectContext
-    var predicate: NSPredicate?
+    var predicate: NSPredicate
     var notifier: DataUpdated
     var onError: HasError?
 
-    init(context: NSManagedObjectContext, predicate: NSPredicate? = nil, notifier: @escaping DataUpdated, onError: HasError? = nil) {
+    init(context: NSManagedObjectContext, predicate: NSPredicate = T.defaultPredicate, notifier: @escaping DataUpdated, onError: HasError? = nil) {
         self.context = context
         self.predicate = predicate
         self.notifier = notifier
@@ -35,13 +35,7 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
 
     private func refresh() {
         do {
-            var result: [T]
-            if let predicate = predicate {
-                result = try T.find(context: context, where: predicate)
-            } else {
-                result = try T.list(context: context)
-            }
-
+            let result = try T.find(context: context, where: predicate)
             if result != data {
                 data = result
                 notifier(result)

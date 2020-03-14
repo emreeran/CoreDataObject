@@ -26,6 +26,10 @@ public extension CoreDataObject {
         entity()
     }
 
+    static var defaultPredicate: NSPredicate {
+        NSPredicate(value: true)
+    }
+
     static var request: NSFetchRequest<Self>? {
         if let entityName = entity.name {
             return NSFetchRequest<Self>(entityName: entityName)
@@ -49,15 +53,7 @@ public extension CoreDataObject {
         return context.object(with: id)
     }
 
-    static func list(context: NSManagedObjectContext) throws -> [Self] {
-        if let req = request {
-            return try fetch(context: context, request: req)
-        }
-
-        throw CoreDataObjectError.invalidEntity
-    }
-
-    static func find(context: NSManagedObjectContext, where predicate: NSPredicate) throws -> [Self] {
+    static func find(context: NSManagedObjectContext, where predicate: NSPredicate = defaultPredicate) throws -> [Self] {
         if let req = request {
             req.predicate = predicate
             return try fetch(context: context, request: req)
@@ -97,13 +93,10 @@ public extension CoreDataObject {
 
 // MARK: - Count methods
 public extension CoreDataObject {
-    static func count(context: NSManagedObjectContext) throws -> Int {
-        return try count(context: context, where: NSPredicate())
-    }
-
-    static func count(context: NSManagedObjectContext, where predicate: NSPredicate) throws -> Int {
+    static func count(context: NSManagedObjectContext, where predicate: NSPredicate = defaultPredicate) throws -> Int {
         if let req = request {
             req.predicate = predicate
+            req.includesSubentities = false
             return try context.count(for: req)
         }
         throw CoreDataObjectError.invalidEntity

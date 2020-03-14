@@ -35,7 +35,7 @@ public extension CoreDataSource {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return try T.list(context: context)
+        return try T.find(context: context)
     }
 
     func findOne(where predicate: NSPredicate) throws -> T? {
@@ -58,6 +58,13 @@ public extension CoreDataSource {
         }
         try object.delete(context: context)
     }
+
+    func count(where predicate: NSPredicate) throws -> Int {
+        guard let context = context else {
+            throw CoreDataSourceError.couldNotGetObjectContext
+        }
+        return try T.count(context: context, where: predicate)
+    }
 }
 
 enum CoreDataSourceError: Error {
@@ -67,7 +74,11 @@ enum CoreDataSourceError: Error {
 
 // MARK: - Observable queries
 public extension CoreDataSource {
-    func findObservable(where predicate: NSPredicate? = nil, notifier: @escaping (([T]) -> Void), onError: ((Error) -> Void)? = nil) throws -> ObservablePredicate<T> {
+    func findObservable(
+        where predicate: NSPredicate = T.defaultPredicate,
+        notifier: @escaping (([T]) -> Void),
+        onError: ((Error) -> Void)? = nil
+    ) throws -> ObservablePredicate<T> {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
