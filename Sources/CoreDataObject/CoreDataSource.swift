@@ -31,6 +31,18 @@ public extension CoreDataSource {
         return try object.save(context: context) as T
     }
 
+    func save<M: Any>(items: [M], map: ((_: M, _: T) -> Void)) throws {
+        guard let context = context else {
+            throw CoreDataSourceError.couldNotGetObjectContext
+        }
+        for item in items {
+            if let object = NSManagedObject.init(entity: T.entity(), insertInto: context) as? T {
+                map(item, object)
+            }
+        }
+        try context.save()
+    }
+
     func list(where predicate: NSPredicate = T.defaultPredicate, sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors) throws -> [T] {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
