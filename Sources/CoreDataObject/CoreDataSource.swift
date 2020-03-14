@@ -31,11 +31,11 @@ public extension CoreDataSource {
         return try object.save(context: context) as T
     }
 
-    func list() throws -> [T] {
+    func list(where predicate: NSPredicate = T.defaultPredicate, sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors) throws -> [T] {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return try T.find(context: context)
+        return try T.find(context: context, where: predicate, sort: descriptors)
     }
 
     func findOne(where predicate: NSPredicate) throws -> T? {
@@ -76,13 +76,14 @@ enum CoreDataSourceError: Error {
 public extension CoreDataSource {
     func findObservable(
         where predicate: NSPredicate = T.defaultPredicate,
+        sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors,
         notifier: @escaping (([T]) -> Void),
         onError: ((Error) -> Void)? = nil
     ) throws -> ObservablePredicate<T> {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return ObservablePredicate<T>(context: context, predicate: predicate, notifier: notifier, onError: onError)
+        return ObservablePredicate<T>(context: context, where: predicate, sort: descriptors, notifier: notifier, onError: onError)
     }
 
     func findOneObservable(where predicate: NSPredicate,  notifier: @escaping ((T?) -> Void), onError: ((Error) -> Void)? = nil) throws -> ObservableCoreDataObject<T> {

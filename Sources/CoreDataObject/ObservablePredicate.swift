@@ -15,12 +15,20 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
     var data: [T] = []
     var context: NSManagedObjectContext
     var predicate: NSPredicate
+    var descriptors: [NSSortDescriptor]
     var notifier: DataUpdated
     var onError: HasError?
 
-    init(context: NSManagedObjectContext, predicate: NSPredicate = T.defaultPredicate, notifier: @escaping DataUpdated, onError: HasError? = nil) {
+    init(
+        context: NSManagedObjectContext,
+        where predicate: NSPredicate = T.defaultPredicate,
+        sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors,
+        notifier: @escaping DataUpdated,
+        onError: HasError? = nil
+    ) {
         self.context = context
         self.predicate = predicate
+        self.descriptors = descriptors
         self.notifier = notifier
         self.onError = onError
         super.init()
@@ -35,7 +43,7 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
 
     private func refresh() {
         do {
-            let result = try T.find(context: context, where: predicate)
+            let result = try T.find(context: context, where: predicate, sort: descriptors)
             if result != data {
                 data = result
                 notifier(result)
