@@ -30,6 +30,10 @@ public extension CoreDataObject {
         NSPredicate(value: true)
     }
 
+    static var defaultSortDescriptors: [NSSortDescriptor] {
+        []
+    }
+
     static var request: NSFetchRequest<Self>? {
         if let entityName = entity.name {
             return NSFetchRequest<Self>(entityName: entityName)
@@ -53,9 +57,14 @@ public extension CoreDataObject {
         return context.object(with: id)
     }
 
-    static func find(context: NSManagedObjectContext, where predicate: NSPredicate = defaultPredicate) throws -> [Self] {
+    static func find(
+        context: NSManagedObjectContext,
+        where predicate: NSPredicate = defaultPredicate,
+        sort descriptors: [NSSortDescriptor] = defaultSortDescriptors
+    ) throws -> [Self] {
         if let req = request {
             req.predicate = predicate
+            req.sortDescriptors = descriptors
             return try fetch(context: context, request: req)
         }
         throw CoreDataObjectError.invalidEntity
