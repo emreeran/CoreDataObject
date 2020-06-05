@@ -71,6 +71,13 @@ public extension CoreDataSource {
         try object.delete(context: context)
     }
 
+    func delete(where predicate: NSPredicate) throws {
+        guard let context = context else {
+            throw CoreDataSourceError.couldNotGetObjectContext
+        }
+        try T.delete(context: context, where: predicate)
+    }
+
     func count(where predicate: NSPredicate) throws -> Int {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext

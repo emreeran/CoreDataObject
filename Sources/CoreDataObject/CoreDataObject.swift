@@ -94,6 +94,17 @@ public extension CoreDataObject {
         throw CoreDataObjectError.entityNotFound
     }
 
+    static func delete(context: NSManagedObjectContext, where predicate: NSPredicate) throws {
+        if let entityName = entity.name {
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            fetchRequest.predicate = predicate
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            try context.execute(deleteRequest)
+            return
+        }
+        throw CoreDataObjectError.invalidEntity
+    }
+
     private static func fetch(context: NSManagedObjectContext, request: NSFetchRequest<Self>) throws -> [Self] {
         request.returnsObjectsAsFaults = false
         return try context.fetch(request)
