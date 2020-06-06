@@ -80,6 +80,7 @@ class CoreDataObserver: NSObject {
         updatedTypes = mergeDictionaries(updatedTypes, map(info: info, type: .updated))
         updatedTypes = mergeDictionaries(updatedTypes, map(info: info, type: .deleted))
         updatedTypes = mergeDictionaries(updatedTypes, map(info: info, type: .refreshed))
+        updatedTypes = mergeDictionaries(updatedTypes, map(info: info, type: .invalidated))
 
         for item in updatedTypes {
             if let observers = typeObservers[item.key] {
@@ -132,6 +133,7 @@ enum ContextObjectChangeType: String {
     case updated
     case deleted
     case refreshed
+    case invalidated
 
     var key: String {
         switch self {
@@ -143,6 +145,8 @@ enum ContextObjectChangeType: String {
             return NSDeletedObjectsKey
         case .refreshed:
             return NSRefreshedObjectsKey
+        case .invalidated:
+            return NSInvalidatedObjectsKey
         }
     }
 }
