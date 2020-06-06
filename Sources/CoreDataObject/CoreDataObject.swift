@@ -99,7 +99,13 @@ public extension CoreDataObject {
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
             fetchRequest.predicate = predicate
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            try context.execute(deleteRequest)
+            deleteRequest.resultType = .resultTypeObjectIDs
+
+            let result = try context.execute(deleteRequest) as! NSBatchDeleteResult
+            let changes: [AnyHashable: Any] = [
+                NSDeletedObjectsKey: result.result as! [NSManagedObjectID]
+            ]
+            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
             return
         }
         throw CoreDataObjectError.invalidEntity
