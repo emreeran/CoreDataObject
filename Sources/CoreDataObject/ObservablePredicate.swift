@@ -16,6 +16,7 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
     var context: NSManagedObjectContext
     var predicate: NSPredicate
     var descriptors: [NSSortDescriptor]
+    var relationshipKeyPathsForPrefetching: [String]
     var notifier: DataUpdated
     var onError: HasError?
 
@@ -23,11 +24,13 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
         context: NSManagedObjectContext,
         where predicate: NSPredicate = T.defaultPredicate,
         sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors,
+        prefetch relationshipKeyPathsForPrefetching: [String] = [],
         notifier: @escaping DataUpdated,
         onError: HasError? = nil
     ) {
         self.context = context
         self.predicate = predicate
+        self.relationshipKeyPathsForPrefetching = relationshipKeyPathsForPrefetching
         self.descriptors = descriptors
         self.notifier = notifier
         self.onError = onError
@@ -43,7 +46,7 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
 
     private func refresh() {
         do {
-            let result = try T.find(context: context, where: predicate, sort: descriptors)
+            let result = try T.find(context: context, where: predicate, sort: descriptors, prefetch: relationshipKeyPathsForPrefetching)
             if result != data {
                 data = result
                 notifier(result)

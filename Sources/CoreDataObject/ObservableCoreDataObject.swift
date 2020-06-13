@@ -15,16 +15,24 @@ public class ObservableCoreDataObject<T: CoreDataObject>: NSObject {
     var data: T? = nil
     var objectID: NSManagedObjectID? = nil
     var context: NSManagedObjectContext
+    var relationshipKeyPathsForPrefetching: [String]
     var notifier: DataUpdated
     var onError: HasError?
 
-    init(context: NSManagedObjectContext, predicate: NSPredicate, notifier: @escaping DataUpdated, onError: HasError? = nil) {
+    init(
+        context: NSManagedObjectContext,
+        predicate: NSPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = [],
+        notifier: @escaping DataUpdated,
+        onError: HasError? = nil
+    ) {
         self.onError = onError
         self.context = context
         self.notifier = notifier
+        self.relationshipKeyPathsForPrefetching = relationshipKeyPathsForPrefetching
         super.init()
 
-        fetch(where: predicate)
+        fetch(where: predicate, prefetch: relationshipKeyPathsForPrefetching)
     }
 
     deinit {
@@ -33,9 +41,9 @@ public class ObservableCoreDataObject<T: CoreDataObject>: NSObject {
         }
     }
 
-    private func fetch(where predicate: NSPredicate) {
+    private func fetch(where predicate: NSPredicate, prefetch relationshipKeyPathsForPrefetching: [String] = []) {
         do {
-            if let result = try T.findOne(context: context, where: predicate) {
+            if let result = try T.findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching) {
                 objectID = result.objectID
                 CoreDataObserver.default.subscribe(to: objectID!, observer: self)
                 notifier(result)
@@ -47,6 +55,7 @@ public class ObservableCoreDataObject<T: CoreDataObject>: NSObject {
 
     private func refresh() {
         do {
+            // TODO: should get from predicate to apply prefetch
             if let id = objectID?.string {
                 let result = try T.findByObjectID(context: context, objectID: id) as? T
                 notifier(result)

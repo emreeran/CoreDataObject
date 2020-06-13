@@ -100,16 +100,29 @@ public extension CoreDataSource {
     func findObservable(
         where predicate: NSPredicate = T.defaultPredicate,
         sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors,
+        prefetch relationshipKeyPathsForPrefetching: [String] = [],
         notifier: @escaping (([T]) -> Void),
         onError: ((Error) -> Void)? = nil
     ) throws -> ObservablePredicate<T> {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return ObservablePredicate<T>(context: context, where: predicate, sort: descriptors, notifier: notifier, onError: onError)
+        return ObservablePredicate<T>(
+            context: context,
+            where: predicate,
+            sort: descriptors,
+            prefetch: relationshipKeyPathsForPrefetching,
+            notifier: notifier,
+            onError: onError
+        )
     }
 
-    func findOneObservable(where predicate: NSPredicate,  notifier: @escaping ((T?) -> Void), onError: ((Error) -> Void)? = nil) throws -> ObservableCoreDataObject<T> {
+    func findOneObservable(
+        where predicate: NSPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = [],
+        notifier: @escaping ((T?) -> Void),
+        onError: ((Error) -> Void)? = nil
+    ) throws -> ObservableCoreDataObject<T> {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
