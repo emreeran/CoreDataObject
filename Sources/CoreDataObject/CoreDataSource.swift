@@ -10,7 +10,7 @@ import CoreData
 
 public protocol CoreDataSource {
     associatedtype T: CoreDataObject
-    var context: NSManagedObjectContext? { get }
+    var context: NSManagedObjectContext? { get set }
 }
 
 public extension CoreDataSource {
