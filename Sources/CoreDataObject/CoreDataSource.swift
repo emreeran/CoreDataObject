@@ -43,25 +43,29 @@ public extension CoreDataSource {
         try context.save()
     }
 
-    func list(where predicate: NSPredicate = T.defaultPredicate, sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors) throws -> [T] {
+    func list(
+        where predicate: NSPredicate = T.defaultPredicate,
+        sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> [T] {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return try T.find(context: context, where: predicate, sort: descriptors)
+        return try T.find(context: context, where: predicate, sort: descriptors, prefetch: relationshipKeyPathsForPrefetching)
     }
 
-    func findOne(where predicate: NSPredicate) throws -> T? {
+    func findOne(where predicate: NSPredicate, prefetch relationshipKeyPathsForPrefetching: [String] = []) throws -> T? {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return try T.findOne(context: context, where: predicate)
+        return try T.findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching)
     }
 
-    func findOneOrThrow(where predicate: NSPredicate) throws -> T {
+    func findOneOrThrow(where predicate: NSPredicate, prefetch relationshipKeyPathsForPrefetching: [String] = []) throws -> T {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return try T.findOneOrThrow(context: context, where: predicate)
+        return try T.findOneOrThrow(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching)
     }
 
     func delete(_ object: T) throws {

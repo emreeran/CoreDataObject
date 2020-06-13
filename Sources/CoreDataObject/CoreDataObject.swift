@@ -60,20 +60,27 @@ public extension CoreDataObject {
     static func find(
         context: NSManagedObjectContext,
         where predicate: NSPredicate = defaultPredicate,
-        sort descriptors: [NSSortDescriptor] = defaultSortDescriptors
+        sort descriptors: [NSSortDescriptor] = defaultSortDescriptors,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
     ) throws -> [Self] {
         if let req = request {
             req.predicate = predicate
             req.sortDescriptors = descriptors
+            req.relationshipKeyPathsForPrefetching = relationshipKeyPathsForPrefetching
             return try fetch(context: context, request: req)
         }
         throw CoreDataObjectError.invalidEntity
     }
 
-    static func findOne(context: NSManagedObjectContext, where predicate: NSPredicate) throws -> Self? {
+    static func findOne(
+        context: NSManagedObjectContext,
+        where predicate: NSPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> Self? {
         if let req = request {
             req.predicate = predicate
             req.fetchLimit = 2
+            req.relationshipKeyPathsForPrefetching = relationshipKeyPathsForPrefetching
             let result = try fetch(context: context, request: req)
             switch result.count {
             case 0:
@@ -87,8 +94,12 @@ public extension CoreDataObject {
         throw CoreDataObjectError.invalidEntity
     }
 
-    static func findOneOrThrow(context: NSManagedObjectContext, where predicate: NSPredicate) throws -> Self {
-        if let result = try findOne(context: context, where: predicate) {
+    static func findOneOrThrow(
+        context: NSManagedObjectContext,
+        where predicate: NSPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> Self {
+        if let result = try findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching) {
             return result
         }
         throw CoreDataObjectError.entityNotFound
