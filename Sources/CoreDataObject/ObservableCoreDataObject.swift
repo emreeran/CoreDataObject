@@ -8,7 +8,7 @@
 
 import CoreData
 
-public class ObservableCoreDataObject<T: CoreDataObject>: NSObject {
+public class ObservableCoreDataObject<T: CoreDataObject, P: NSPredicate>: NSObject {
     typealias DataUpdated = (_: T?) -> Void
     typealias HasError = (_: Error) -> Void
 
@@ -21,7 +21,7 @@ public class ObservableCoreDataObject<T: CoreDataObject>: NSObject {
 
     init(
         context: NSManagedObjectContext,
-        predicate: NSPredicate,
+        predicate: P,
         prefetch relationshipKeyPathsForPrefetching: [String] = [],
         notifier: @escaping DataUpdated,
         onError: HasError? = nil
@@ -41,7 +41,7 @@ public class ObservableCoreDataObject<T: CoreDataObject>: NSObject {
         }
     }
 
-    private func fetch(where predicate: NSPredicate, prefetch relationshipKeyPathsForPrefetching: [String] = []) {
+    private func fetch(where predicate: P, prefetch relationshipKeyPathsForPrefetching: [String] = []) {
         do {
             if let result = try T.findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching) {
                 objectID = result.objectID

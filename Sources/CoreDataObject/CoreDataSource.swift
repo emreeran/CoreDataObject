@@ -103,11 +103,31 @@ public extension CoreDataSource {
         prefetch relationshipKeyPathsForPrefetching: [String] = [],
         notifier: @escaping (([T]) -> Void),
         onError: ((Error) -> Void)? = nil
-    ) throws -> ObservablePredicate<T> {
+    ) throws -> ObservablePredicate<T, NSPredicate> {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }
-        return ObservablePredicate<T>(
+        return ObservablePredicate<T, NSPredicate>(
+            context: context,
+            where: predicate,
+            sort: descriptors,
+            prefetch: relationshipKeyPathsForPrefetching,
+            notifier: notifier,
+            onError: onError
+        )
+    }
+
+    func findObservable(
+        where predicate: NSCompoundPredicate = T.defaultCompoundPredicate,
+        sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors,
+        prefetch relationshipKeyPathsForPrefetching: [String] = [],
+        notifier: @escaping (([T]) -> Void),
+        onError: ((Error) -> Void)? = nil
+    ) throws -> ObservablePredicate<T, NSCompoundPredicate> {
+        guard let context = context else {
+            throw CoreDataSourceError.couldNotGetObjectContext
+        }
+        return ObservablePredicate<T, NSCompoundPredicate>(
             context: context,
             where: predicate,
             sort: descriptors,
@@ -122,7 +142,19 @@ public extension CoreDataSource {
         prefetch relationshipKeyPathsForPrefetching: [String] = [],
         notifier: @escaping ((T?) -> Void),
         onError: ((Error) -> Void)? = nil
-    ) throws -> ObservableCoreDataObject<T> {
+    ) throws -> ObservableCoreDataObject<T, NSPredicate> {
+        guard let context = context else {
+            throw CoreDataSourceError.couldNotGetObjectContext
+        }
+        return ObservableCoreDataObject(context: context, predicate: predicate, notifier: notifier, onError: onError)
+    }
+
+    func findOneObservable(
+        where predicate: NSCompoundPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = [],
+        notifier: @escaping ((T?) -> Void),
+        onError: ((Error) -> Void)? = nil
+    ) throws -> ObservableCoreDataObject<T, NSCompoundPredicate> {
         guard let context = context else {
             throw CoreDataSourceError.couldNotGetObjectContext
         }

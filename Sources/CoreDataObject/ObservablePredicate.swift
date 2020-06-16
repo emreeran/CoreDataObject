@@ -8,13 +8,13 @@
 
 import CoreData
 
-public class ObservablePredicate<T: CoreDataObject>: NSObject {
+public class ObservablePredicate<T: CoreDataObject, P: NSPredicate>: NSObject {
     typealias DataUpdated = (_: [T]) -> Void
     typealias HasError = (_: Error) -> Void
 
     var data: [T] = []
     var context: NSManagedObjectContext
-    var predicate: NSPredicate
+    var predicate: P
     var descriptors: [NSSortDescriptor]
     var relationshipKeyPathsForPrefetching: [String]
     var notifier: DataUpdated
@@ -22,7 +22,7 @@ public class ObservablePredicate<T: CoreDataObject>: NSObject {
 
     init(
         context: NSManagedObjectContext,
-        where predicate: NSPredicate = T.defaultPredicate,
+        where predicate: P,
         sort descriptors: [NSSortDescriptor] = T.defaultSortDescriptors,
         prefetch relationshipKeyPathsForPrefetching: [String] = [],
         notifier: @escaping DataUpdated,

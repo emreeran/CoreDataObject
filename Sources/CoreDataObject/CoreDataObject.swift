@@ -30,6 +30,10 @@ public extension CoreDataObject {
         NSPredicate(value: true)
     }
 
+    static var defaultCompoundPredicate: NSCompoundPredicate {
+        NSCompoundPredicate(type: .and, subpredicates: [defaultPredicate])
+    }
+
     static var defaultSortDescriptors: [NSSortDescriptor] {
         []
     }
@@ -63,6 +67,76 @@ public extension CoreDataObject {
         sort descriptors: [NSSortDescriptor] = defaultSortDescriptors,
         prefetch relationshipKeyPathsForPrefetching: [String] = []
     ) throws -> [Self] {
+        return try _find(context: context, where: predicate, sort: descriptors, prefetch: relationshipKeyPathsForPrefetching)
+    }
+
+    static func find(
+        context: NSManagedObjectContext,
+        where predicate: NSCompoundPredicate = defaultCompoundPredicate,
+        sort descriptors: [NSSortDescriptor] = defaultSortDescriptors,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> [Self] {
+        return try _find(context: context, where: predicate, sort: descriptors, prefetch: relationshipKeyPathsForPrefetching)
+    }
+
+    static func findOne(
+        context: NSManagedObjectContext,
+        where predicate: NSPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> Self? {
+        return try _findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching)
+    }
+
+    static func findOne(
+        context: NSManagedObjectContext,
+        where predicate: NSCompoundPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> Self? {
+        return try _findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching)
+    }
+
+    static func findOneOrThrow(
+        context: NSManagedObjectContext,
+        where predicate: NSPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> Self {
+        return try _findOneOrThrow(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching)
+    }
+
+    static func findOneOrThrow(
+        context: NSManagedObjectContext,
+        where predicate: NSCompoundPredicate,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> Self {
+        return try _findOneOrThrow(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching)
+    }
+
+    static func delete(context: NSManagedObjectContext, where predicate: NSPredicate) throws {
+        if let entityName = entity.name {
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            fetchRequest.predicate = predicate
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            deleteRequest.resultType = .resultTypeObjectIDs
+
+            let result = try context.execute(deleteRequest) as! NSBatchDeleteResult
+            let changes: [AnyHashable: Any] = [
+                NSDeletedObjectsKey: result.result as! [NSManagedObjectID]
+            ]
+            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
+            return
+        }
+        throw CoreDataObjectError.invalidEntity
+    }
+}
+
+// MARK: - Private Members
+extension CoreDataObject {
+    private static func _find<P: NSPredicate>(
+        context: NSManagedObjectContext,
+        where predicate: P,
+        sort descriptors: [NSSortDescriptor] = defaultSortDescriptors,
+        prefetch relationshipKeyPathsForPrefetching: [String] = []
+    ) throws -> [Self] {
         if let req = request {
             req.predicate = predicate
             req.sortDescriptors = descriptors
@@ -72,9 +146,9 @@ public extension CoreDataObject {
         throw CoreDataObjectError.invalidEntity
     }
 
-    static func findOne(
+    private static func _findOne<P: NSPredicate>(
         context: NSManagedObjectContext,
-        where predicate: NSPredicate,
+        where predicate: P,
         prefetch relationshipKeyPathsForPrefetching: [String] = []
     ) throws -> Self? {
         if let req = request {
@@ -94,32 +168,15 @@ public extension CoreDataObject {
         throw CoreDataObjectError.invalidEntity
     }
 
-    static func findOneOrThrow(
+    private static func _findOneOrThrow<P: NSPredicate>(
         context: NSManagedObjectContext,
-        where predicate: NSPredicate,
+        where predicate: P,
         prefetch relationshipKeyPathsForPrefetching: [String] = []
     ) throws -> Self {
-        if let result = try findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching) {
+        if let result = try _findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching) {
             return result
         }
         throw CoreDataObjectError.entityNotFound
-    }
-
-    static func delete(context: NSManagedObjectContext, where predicate: NSPredicate) throws {
-        if let entityName = entity.name {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-            fetchRequest.predicate = predicate
-            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-            deleteRequest.resultType = .resultTypeObjectIDs
-
-            let result = try context.execute(deleteRequest) as! NSBatchDeleteResult
-            let changes: [AnyHashable: Any] = [
-                NSDeletedObjectsKey: result.result as! [NSManagedObjectID]
-            ]
-            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
-            return
-        }
-        throw CoreDataObjectError.invalidEntity
     }
 
     private static func fetch(context: NSManagedObjectContext, request: NSFetchRequest<Self>) throws -> [Self] {
