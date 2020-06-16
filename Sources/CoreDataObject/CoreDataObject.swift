@@ -129,13 +129,24 @@ public extension CoreDataObject {
     }
 }
 
+// MARK: - Count methods
+public extension CoreDataObject {
+    static func count(context: NSManagedObjectContext, where predicate: NSPredicate = defaultPredicate) throws -> Int {
+        return try _count(context: context, where: predicate)
+    }
+
+    static func count(context: NSManagedObjectContext, where predicate: NSCompoundPredicate = defaultCompoundPredicate) throws -> Int {
+        return try _count(context: context, where: predicate)
+    }
+}
+
 // MARK: - Private Members
 extension CoreDataObject {
     private static func _find<P: NSPredicate>(
         context: NSManagedObjectContext,
         where predicate: P,
-        sort descriptors: [NSSortDescriptor] = defaultSortDescriptors,
-        prefetch relationshipKeyPathsForPrefetching: [String] = []
+        sort descriptors: [NSSortDescriptor],
+        prefetch relationshipKeyPathsForPrefetching: [String]
     ) throws -> [Self] {
         if let req = request {
             req.predicate = predicate
@@ -149,7 +160,7 @@ extension CoreDataObject {
     private static func _findOne<P: NSPredicate>(
         context: NSManagedObjectContext,
         where predicate: P,
-        prefetch relationshipKeyPathsForPrefetching: [String] = []
+        prefetch relationshipKeyPathsForPrefetching: [String]
     ) throws -> Self? {
         if let req = request {
             req.predicate = predicate
@@ -171,7 +182,7 @@ extension CoreDataObject {
     private static func _findOneOrThrow<P: NSPredicate>(
         context: NSManagedObjectContext,
         where predicate: P,
-        prefetch relationshipKeyPathsForPrefetching: [String] = []
+        prefetch relationshipKeyPathsForPrefetching: [String]
     ) throws -> Self {
         if let result = try _findOne(context: context, where: predicate, prefetch: relationshipKeyPathsForPrefetching) {
             return result
@@ -179,21 +190,18 @@ extension CoreDataObject {
         throw CoreDataObjectError.entityNotFound
     }
 
-    private static func fetch(context: NSManagedObjectContext, request: NSFetchRequest<Self>) throws -> [Self] {
-        request.returnsObjectsAsFaults = false
-        return try context.fetch(request)
-    }
-}
-
-// MARK: - Count methods
-public extension CoreDataObject {
-    static func count(context: NSManagedObjectContext, where predicate: NSPredicate = defaultPredicate) throws -> Int {
+    private static func _count<P: NSPredicate>(context: NSManagedObjectContext, where predicate: P) throws -> Int {
         if let req = request {
             req.predicate = predicate
             req.includesSubentities = false
             return try context.count(for: req)
         }
         throw CoreDataObjectError.invalidEntity
+    }
+
+    private static func fetch(context: NSManagedObjectContext, request: NSFetchRequest<Self>) throws -> [Self] {
+        request.returnsObjectsAsFaults = false
+        return try context.fetch(request)
     }
 }
 
